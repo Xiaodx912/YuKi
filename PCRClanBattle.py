@@ -82,5 +82,5 @@ class ClanBattle:
             return '第{}名：{}，分数：{}，当前进度：{}周目{}王，剩余血量{}/{}'.format(status['rank'], status['clan_name'], status['damage'], lap, boss_id, remaining, BOSS_LIFE_LIST[boss_id - 1])
 
 #Clan = ClanBattle(1160936629251, '267364644', '771c02865f3ab18e29381d0de5aac04e_sh')
-#print(Clan.rank_to_string(Clan.get_rank_status(102), long_info = True))
+#print(Clan.rank_to_string(Clan.get_rank_status(1), long_info = True))
 #Clan.Client.Callapi('profile/get_profile',{'target_viewer_id':1145385387565})
