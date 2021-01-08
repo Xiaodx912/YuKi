@@ -45,7 +45,6 @@ class ArenaMonitor:
         if not self.Client.ready:
             logging.error("BCRClient not ready,get profile fail")
             return {}
-        #return await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_id})
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_id})
         rec={}
         rec['time']=time.time()
@@ -68,7 +67,7 @@ class ArenaMonitor:
         self.db[target_uid]=data
         
     async def mention(self,qqid,type,prev,now):
-        print("{qqid}'s {type} decrease from {prev} to {now}")
+        print("{}'s {} decrease from {} to {}".format(qqid,type,prev,now))
         
     async def update_profile(self, target_uid):
         rec = await self.get_profile(target_uid)
