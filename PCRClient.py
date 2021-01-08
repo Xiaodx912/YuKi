@@ -4,6 +4,7 @@ import hashlib
 import base64
 import random
 import logging
+import time
 class PCRClient:
     def __init__(self, viewer_id):
         self.viewer_id = viewer_id
@@ -65,7 +66,12 @@ class PCRClient:
                 self.viewer_id = int(ret_header["viewer_id"])
         return ret["data"]
     def login(self, uid, access_key):
+        self.login_time=time.time()
         self.manifest = self.Callapi('source_ini/get_maintenance_status', {}, False)
+        if 'server_error' in self.manifest:
+            logging.info('BCR server err:'+self.manifest['server_error']['title'])
+            self.ready=false
+            return
         ver = self.manifest["required_manifest_ver"]
         logging.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
@@ -76,6 +82,7 @@ class PCRClient:
         self.Callapi("load/index", {"carrier": "HUAWEI"})
         self.Home = self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
         logging.debug(str(self.Home))
+        self.ready=true
 
 
 
