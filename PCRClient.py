@@ -5,8 +5,10 @@ import base64
 import random
 import logging
 import time
+import asyncio
 class PCRClient:
-    def __init__(self, viewer_id):
+    def __init__(self, viewer_id, verify=False):
+        self.verify=verify
         self.viewer_id = viewer_id
         self.request_id = ""
         self.session_id = ""
@@ -36,7 +38,12 @@ class PCRClient:
             "SHORT-UDID": "000a85;436;834=656=636=186A781=432?856C486@711717752186363143276147888735732",
             "Connection": "Keep-Alive"}
         self.conn = requests.session()
-    def Callapi(self, apiurl, request, crypted = True):
+        self.ready=False
+        self.login_time=0
+
+    def make_request(self,url,headers,data,verify):
+        return self.conn.post(url=url,headers=headers,data=data,verify=verify)
+    async def Callapi(self, apiurl, request, crypted = True):
         key = CreateKey()
         if crypted:
             request['viewer_id'] = encrypt(str(self.viewer_id), key).decode()
@@ -48,9 +55,9 @@ class PCRClient:
         headers = self.default_headers
         if flag: headers["REQUEST-ID"] = self.request_id
         if flag2: headers["SID"] = self.session_id
-        resp = self.conn.post(url= self.urlroot + apiurl,
-                        headers = headers, data = req,verify=False)
-        null = None
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(None,self.make_request,self.urlroot + apiurl,headers,req,self.verify)
+        null=None
         if crypted:
             ret = decrypt(resp.content)
         else: ret = eval(resp.content.decode())
@@ -65,24 +72,24 @@ class PCRClient:
             if ret_header["viewer_id"] != None and ret_header["viewer_id"] != 0 and ret_header["viewer_id"] != self.viewer_id:
                 self.viewer_id = int(ret_header["viewer_id"])
         return ret["data"]
-    def login(self, uid, access_key):
+    async def login(self, uid, access_key):
         self.login_time=time.time()
-        self.manifest = self.Callapi('source_ini/get_maintenance_status', {}, False)
+        self.manifest = await self.Callapi('source_ini/get_maintenance_status', {}, False)
         if 'server_error' in self.manifest:
             logging.info('BCR server err:'+self.manifest['server_error']['title'])
-            self.ready=false
+            self.ready=False
             return
         ver = self.manifest["required_manifest_ver"]
         logging.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        logging.debug(str(self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
+        logging.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
 
-        logging.debug(str(self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
-        logging.debug(str(self.Callapi("check/check_agreement", {}) ))
-        self.Callapi("load/index", {"carrier": "HUAWEI"})
-        self.Home = self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
+        logging.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
+        logging.debug(str(await self.Callapi("check/check_agreement", {}) ))
+        await self.Callapi("load/index", {"carrier": "HUAWEI"})
+        self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
         logging.debug(str(self.Home))
-        self.ready=true
+        self.ready=True
 
 
 

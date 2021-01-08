@@ -5,6 +5,7 @@ import base64
 import random
 import os
 import time
+import asyncio
 from PCRClient import PCRClient
 import logging
 from sqlitedict import SqliteDict
@@ -30,22 +31,63 @@ class ArenaMonitor:
         self.uid = uid
         self.access_key = access_key
 
-        self.Client = PCRClient(viewer_id)
-        self.Client.login(self.uid, self.access_key)
+        self.Client = PCRClient(viewer_id,self.config['verify'])
 
-    def do_login():
+    async def do_login(self):
         if not self.Client.ready:
             if time.time()>self.Client.login_time+self.config["login_cd"]:
-                self.Client.login(self.uid, self.access_key)
+                await self.Client.login(self.uid, self.access_key)
             else:
                 logging.debug("Client loging cd")
 
-    def get_profile(self, target_id):
-        self.do_login()
+    async def get_profile(self, target_id):
+        await self.do_login()
         if not self.Client.ready:
-            logging.error("BCRClient not ready,get fail")
+            logging.error("BCRClient not ready,get profile fail")
             return {}
-        return self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_id})
+        #return await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_id})
+        profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_id})
+        rec={}
+        rec['time']=time.time()
+        rec['arena_rank']=profile['user_info']['arena_rank']
+        rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
+        return rec
 
+
+    async def add_uid(self, target_uid, qqid):
+        rec = await self.get_profile(target_uid)
+        if rec == {}:
+            logging.error("empty profile, add fail")
+            return
+        if str(target_uid) in list(self.db.keys()):
+            logging.error("uid item exist")
+            return
+        data={}
+        data['rec']=rec
+        data['qqid']=qqid
+        self.db[target_uid]=data
+        
+    async def mention(self,qqid,type,prev,now):
+        print("{qqid}'s {type} decrease from {prev} to {now}")
+        
+    async def update_profile(self, target_uid):
+        rec = await self.get_profile(target_uid)
+        data=self.db[target_uid]
+        prev=data['rec']
+        if rec['arena_rank'] > prev['arena_rank']:
+            await self.mention(data['qqid'],'jjc',prev['arena_rank'],rec['arena_rank'])
+        if rec['grand_arena_rank'] > prev['grand_arena_rank']:
+            await self.mention(data['qqid'],'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank'])
+        data['rec']=rec
+        self.db[target_uid]=data
+
+    async def update_all(self):
+        for uid in self.db.keys():
+            await self.update_profile(int(uid))
+
+#from ArenaMonitor import *
+#a=ArenaMonitor(1160936629251, '267364644', '771c02865f3ab18e29381d0de5aac04e_sh')
+#asyncio.run(a.do_login())
+#asyncio.run(a.update_all())
 
 

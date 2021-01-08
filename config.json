@@ -1,5 +1,6 @@
 {
     "db_dir": "./",
+    "verify": true,
     "login_cd": 120,
     "refresh_cd": 30,
     "elevator_timer": 65
