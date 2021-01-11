@@ -10,11 +10,9 @@ try:
     logger = log.new_logger('YuKi')
 except:
     import logging
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger('YuKi')
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    logger.addHandler(ch)
+    logger.setLevel(logging.DEBUG)
 
 class PCRClient:
     def __init__(self, viewer_id, verify=False):
@@ -97,7 +95,7 @@ class PCRClient:
         logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
         self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
-        logger.debug(str(self.Home))
+        #logger.debug(str(self.Home))
         self.ready=True
 
 

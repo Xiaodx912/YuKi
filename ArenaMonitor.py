@@ -2,7 +2,7 @@ import requests
 import os
 import time
 import asyncio
-from PCRClient import PCRClient
+from PCRClient import *
 from sqlitedict import SqliteDict
 import json
 
@@ -11,11 +11,9 @@ try:
     logger = log.new_logger('YuKi')
 except:
     import logging
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger('YuKi')
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    logger.addHandler(ch)
+    logger.setLevel(logging.DEBUG)
 
 def get_path(*paths):
     return os.path.join(os.path.dirname(__file__), *paths)
@@ -123,6 +121,9 @@ class ArenaMonitor:
 def aaa():
     a=ArenaMonitor(1160936629251, '267364644', '771c02865f3ab18e29381d0de5aac04e_sh')
     asyncio.run(a.do_login())
+    logger.debug(asyncio.run(a.update_all()))
     return a
+
+a=aaa()
 #from ArenaMonitor import *
 
