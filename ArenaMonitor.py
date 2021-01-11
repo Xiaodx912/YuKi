@@ -92,9 +92,9 @@ class ArenaMonitor:
         prev=data['rec']
         delta=rec['time']-prev['time']
         if rec['arena_rank'] > prev['arena_rank']:
-            mention_info.append(await self.mention_func(data['qqid'],'jjc',prev['arena_rank'],rec['arena_rank']),delta)
+            mention_info.append(await mention_func(self,data['qqid'],'jjc',prev['arena_rank'],rec['arena_rank'],delta))
         if rec['grand_arena_rank'] > prev['grand_arena_rank']:
-            mention_info.append(await self.mention_func(data['qqid'],'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank']),delta)
+            mention_info.append(await mention_func(self,data['qqid'],'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank'],delta))
         data['rec']=rec
         self.db[target_uid]=data
         return mention_info
@@ -115,7 +115,6 @@ class ArenaMonitor:
 def aaa():
     a=ArenaMonitor(1160936629251, '267364644', '771c02865f3ab18e29381d0de5aac04e_sh')
     asyncio.run(a.do_login())
-    asyncio.run(a.update_all())
     return a
 #from ArenaMonitor import *
 
