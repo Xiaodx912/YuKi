@@ -1,11 +1,21 @@
 import requests
 from PCRPack import *
 import hashlib
-import base64
 import random
-import logging
 import time
 import asyncio
+
+try:
+    from hoshino import log
+    logger = log.new_logger('YuKi')
+except:
+    import logging
+    logger = logging.getLogger('YuKi')
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(ch)
+
 class PCRClient:
     def __init__(self, viewer_id, verify=False):
         self.verify=verify
@@ -76,19 +86,18 @@ class PCRClient:
         self.login_time=time.time()
         self.manifest = await self.Callapi('source_ini/get_maintenance_status', {}, False)
         if 'server_error' in self.manifest:
-            logging.info('BCR server err:'+self.manifest['server_error']['title'])
+            logger.info('BCR server err:'+self.manifest['server_error']['title'])
             self.ready=False
             return
         ver = self.manifest["required_manifest_ver"]
-        logging.debug(str(self.manifest))
+        logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        logging.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
-
-        logging.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
-        logging.debug(str(await self.Callapi("check/check_agreement", {}) ))
-        await self.Callapi("load/index", {"carrier": "HUAWEI"})
+        logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
+        logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
+        logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
+        await self.Callapi("load/index", {"carrier": "XIAOMI"})
         self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
-        logging.debug(str(self.Home))
+        logger.debug(str(self.Home))
         self.ready=True
 
 

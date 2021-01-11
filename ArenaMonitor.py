@@ -1,15 +1,21 @@
 import requests
-import ast
-import hashlib
-import base64
-import random
 import os
 import time
 import asyncio
 from PCRClient import PCRClient
-import logging
 from sqlitedict import SqliteDict
 import json
+
+try:
+    from hoshino import log
+    logger = log.new_logger('YuKi')
+except:
+    import logging
+    logger = logging.getLogger('YuKi')
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(ch)
 
 def get_path(*paths):
     return os.path.join(os.path.dirname(__file__), *paths)
@@ -43,47 +49,49 @@ class ArenaMonitor:
             if time.time()>self.Client.login_time+self.config["login_cd"]:
                 await self.Client.login(self.uid, self.access_key)
             else:
-                logging.debug("Client loging cd")
+                logger.debug("Client loging cd")
 
     async def get_profile(self, target_uid:int):
         await self.do_login()
         if not self.Client.ready:
-            logging.error("BCRClient not ready,get profile fail")
+            logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
         rec={}
         rec['time']=time.time()
+        rec['name']=profile['user_info']['user_name']
         rec['arena_rank']=profile['user_info']['arena_rank']
         rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
         return rec
 
 
-    async def add_uid(self, target_uid:int, qqid:int):
+    async def add_uid(self, target_uid:int, qqid:int, group_id:int):
         rec = await self.get_profile(target_uid)
         if rec == {}:
-            logging.error("empty profile, add fail")
+            logger.error("empty profile, add fail")
             return
         if str(target_uid) in list(self.db.keys()):
-            logging.error("uid item exist")
+            logger.error("uid item exist")
             return
         data={}
         data['rec']=rec
         data['qqid']=qqid
+        data['group']=group_id
         self.db[target_uid]=data
 
     async def remove_uid(self, target_uid:int):
         if str(target_uid) not in list(self.db.keys()):
-            logging.error("uid item not exist")
+            logger.error("uid item not exist")
             return
         self.db.pop(target_uid)
 
         
-    async def mention_test(self,qqid:int,type:str,prev:int,now:int,delta):
-        info_str=f"{qqid}'s {type} decrease from {prev} to {now}"
+    async def mention_test(self,uid:int,type:str,prev:int,now:int,delta):
+        info_str=f"===Group {self.db[uid]['group']}===\n"+f"[CQ:at,qq={self.db[uid]['qqid']}] {self.db[uid]['rec']['name']}'s {type} {prev}->{now}"
         if prev < search_max(now) and delta <= self.config['elevator_timer']:
-            info_str += f"in {int(delta)}S\nCurrent search max is {search_max(now)}, elevator detected"
-        print(info_str)
-        return {'qqid':qqid, 'type':type, 'prev':prev, 'now':now, 'str':info_str}
+            info_str += f" in {int(delta)}S\n"+f"Current search max is {search_max(now)}, elevator detected"
+        #print(info_str)
+        return {'uid':uid, 'type':type, 'prev':prev, 'now':now, 'str':info_str}
         
     async def update_profile(self, target_uid:int, mention_func=mention_test):
         mention_info=[]
@@ -92,9 +100,9 @@ class ArenaMonitor:
         prev=data['rec']
         delta=rec['time']-prev['time']
         if rec['arena_rank'] > prev['arena_rank']:
-            mention_info.append(await mention_func(self,data['qqid'],'jjc',prev['arena_rank'],rec['arena_rank'],delta))
+            mention_info.append(await mention_func(self,target_uid,'jjc',prev['arena_rank'],rec['arena_rank'],delta))
         if rec['grand_arena_rank'] > prev['grand_arena_rank']:
-            mention_info.append(await mention_func(self,data['qqid'],'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank'],delta))
+            mention_info.append(await mention_func(self,target_uid,'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank'],delta))
         data['rec']=rec
         self.db[target_uid]=data
         return mention_info
@@ -109,7 +117,7 @@ class ArenaMonitor:
         bind_list=[]
         for item in self.db.items():
             if item[1]['qqid']==target_qqid:
-                bind_list.append((uid,data))
+                bind_list.append(item)
         return bind_list
 
 def aaa():

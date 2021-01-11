@@ -6,5 +6,6 @@
     "_access_key": "771c02865f3ab18e29381d0de5aac04e_sh",
     "login_cd": 120,
     "refresh_cd": 45,
-    "elevator_timer": 100
+    "elevator_timer": 100,
+    "private_mode": true
 }
