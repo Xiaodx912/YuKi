@@ -2,7 +2,7 @@ import requests
 import os
 import time
 import asyncio
-from PCRClient import *
+from .PCRClient import *
 from sqlitedict import SqliteDict
 import json
 
@@ -126,4 +126,3 @@ def aaa():
 
 a=aaa()
 #from ArenaMonitor import *
-

@@ -1,5 +1,5 @@
 import requests
-from PCRPack import *
+from .PCRPack import *
 import hashlib
 import random
 import time
@@ -88,11 +88,11 @@ class PCRClient:
             self.ready=False
             return
         ver = self.manifest["required_manifest_ver"]
-        logger.debug(str(self.manifest))
+        #logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
-        logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
-        logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
+        Slogger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
+        #logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
+        #logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
         self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
         #logger.debug(str(self.Home))

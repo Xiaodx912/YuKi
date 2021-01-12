@@ -71,6 +71,4 @@ async def bind_self_uid(bot,ev):
     await yuki.add_uid(uid,qqid,group)
     await bot.send(ev, "bind fin")
 
-#todo
-#switch to send(bot, ev, message, ensure_private=True)
 
