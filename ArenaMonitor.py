@@ -55,7 +55,6 @@ class ArenaMonitor:
             logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
-        logger.debug(profile)
         rec={}
         try:
             rec['time']=time.time()
@@ -63,6 +62,7 @@ class ArenaMonitor:
             rec['arena_rank']=profile['user_info']['arena_rank']
             rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
         except:
+            logger.debug(profile)
             return {}
         return rec
 
