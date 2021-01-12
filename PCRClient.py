@@ -90,7 +90,7 @@ class PCRClient:
         ver = self.manifest["required_manifest_ver"]
         #logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        Slogger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
+        logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
         #logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
         #logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
