@@ -36,8 +36,10 @@ async def manual_update(bot, ev):
             await bot.send_msg(group_id=yuki.db[info['uid']]['group'], message=info['str'])
 
 
-@sv.on_prefix('YuKi_add', permission=SUPERUSER)
+@sv.on_prefix('YuKi_add')
 async def add_watch_list(bot, ev):
+    if not priv.check_priv(ev, priv.SUPERUSER):
+        await bot.send(ev,'admin only')
     args = ev.message.extract_plain_text().split()
     try:
         uid = args[0]
