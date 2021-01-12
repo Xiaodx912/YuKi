@@ -1,5 +1,5 @@
-import requests
 from .PCRPack import *
+from hoshino.aiorequests import post
 import hashlib
 import random
 import time
@@ -45,12 +45,10 @@ class PCRClient:
             "RES-VER": "10002200",
             "SHORT-UDID": "000a85;436;834=656=636=186A781=432?856C486@711717752186363143276147888735732",
             "Connection": "Keep-Alive"}
-        self.conn = requests.session()
+        #self.conn = requests.session()
         self.ready=False
         self.login_time=0
 
-    def make_request(self,url,headers,data,verify):
-        return self.conn.post(url=url,headers=headers,data=data,verify=verify)
     async def Callapi(self, apiurl, request, crypted = True):
         key = CreateKey()
         if crypted:
@@ -63,12 +61,13 @@ class PCRClient:
         headers = self.default_headers
         if flag: headers["REQUEST-ID"] = self.request_id
         if flag2: headers["SID"] = self.session_id
-        loop = asyncio.get_event_loop()
-        resp = await loop.run_in_executor(None,self.make_request,self.urlroot + apiurl,headers,req,self.verify)
+
+        resp = await post(self.urlroot + apiurl,headers = headers,data = req,timeout = 2)
+
         null=None
         if crypted:
-            ret = decrypt(resp.content)
-        else: ret = eval(resp.content.decode())
+            ret = decrypt(await resp.content)
+        else: ret = eval((await resp.content).decode())
         ret_header = ret["data_headers"]
         if "sid" in ret_header:
             if ret_header["sid"] != None and ret_header["sid"] != "":
@@ -79,6 +78,8 @@ class PCRClient:
         if "viewer_id" in ret_header:
             if ret_header["viewer_id"] != None and ret_header["viewer_id"] != 0 and ret_header["viewer_id"] != self.viewer_id:
                 self.viewer_id = int(ret_header["viewer_id"])
+        if 'server_error' in ret["data"]:
+            self.ready=False
         return ret["data"]
     async def login(self, uid, access_key):
         self.login_time=time.time()
@@ -88,19 +89,15 @@ class PCRClient:
             self.ready=False
             return
         ver = self.manifest["required_manifest_ver"]
-        #logger.debug(str(self.manifest))
+        logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
+        await asyncio.sleep(1)
         logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
-        #logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
-        #logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
+        await asyncio.sleep(1)
+        logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
+        await asyncio.sleep(1)
+        logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
         self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
-        #logger.debug(str(self.Home))
         self.ready=True
 
-
-
-        
-
-    
-    

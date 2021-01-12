@@ -55,11 +55,15 @@ class ArenaMonitor:
             logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
+        logger.debug(profile)
         rec={}
-        rec['time']=time.time()
-        rec['name']=profile['user_info']['user_name']
-        rec['arena_rank']=profile['user_info']['arena_rank']
-        rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
+        try:
+            rec['time']=time.time()
+            rec['name']=profile['user_info']['user_name']
+            rec['arena_rank']=profile['user_info']['arena_rank']
+            rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
+        except:
+            return {}
         return rec
 
 
@@ -88,12 +92,14 @@ class ArenaMonitor:
         info_str=f"===Group {self.db[uid]['group']}===\n"+f"[CQ:at,qq={self.db[uid]['qqid']}] {self.db[uid]['rec']['name']}'s {type} {prev}->{now}"
         if prev < search_max(now) and delta <= self.config['elevator_timer']:
             info_str += f" in {int(delta)}S\n"+f"Current search max is {search_max(now)}, elevator detected"
-        #print(info_str)
         return {'uid':uid, 'type':type, 'prev':prev, 'now':now, 'str':info_str}
         
     async def update_profile(self, target_uid:int, mention_func=mention_test):
         mention_info=[]
         rec = await self.get_profile(target_uid)
+        if rec == {}:
+            logger.error("empty profile, update fail")
+            return mention_info
         data=self.db[target_uid]
         prev=data['rec']
         delta=rec['time']-prev['time']
@@ -118,11 +124,4 @@ class ArenaMonitor:
                 bind_list.append(item)
         return bind_list
 
-def aaa():
-    a=ArenaMonitor(1160936629251, '267364644', '771c02865f3ab18e29381d0de5aac04e_sh')
-    asyncio.run(a.do_login())
-    logger.debug(asyncio.run(a.update_all()))
-    return a
-
-a=aaa()
 #from ArenaMonitor import *

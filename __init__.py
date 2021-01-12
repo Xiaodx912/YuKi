@@ -1,23 +1,28 @@
 from os import path
 import asyncio
 import datetime
-
 import hoshino
-from nonebot.permission import SUPERUSER
-import asyncio
 from .ArenaMonitor import ArenaMonitor, get_config
 
 sv = hoshino.Service('YuKi', visible=False)
 logger = hoshino.log.new_logger('YuKi')
 
+from apscheduler.triggers.date import DateTrigger
+from nonebot import scheduler
+
 config = get_config()
 yuki=ArenaMonitor(config['_viewerid'], config['_uid'], config['_access_key'])
-asyncio.run(yuki.do_login())
+scheduler.add_job(
+        func=yuki.do_login,
+        trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=10)),
+        args=(),
+        misfire_grace_time=1)
 
 @sv.scheduled_job('interval', seconds=config['refresh_cd'])
 async def scheduled_update():
     bot=hoshino.get_bot()
     mention_info=await yuki.update_all()
+    logger.debug(mention_info)
     for info in mention_info:
         if config['private_mode']:
             await bot.send_msg(user_id=yuki.db[info['uid']]['qqid'], message=info['str'],auto_escape=True)
@@ -25,8 +30,10 @@ async def scheduled_update():
             await bot.send_msg(group_id=yuki.db[info['uid']]['group'], message=info['str'])
 
 
-@sv.on_fullmatch('YuKi_update', permission=SUPERUSER)
+@sv.on_fullmatch('YuKi_update')
 async def manual_update(bot, ev):
+    if not hoshino.priv.check_priv(ev, hoshino.priv.SUPERUSER):
+        await bot.send(ev,'admin only')
     mention_info=await yuki.update_all()
     await bot.send(ev, f"YuKi updated {len(list(yuki.db.keys()))} users' profile, generate {len(mention_info)} reminds")
     for info in mention_info:
@@ -38,7 +45,7 @@ async def manual_update(bot, ev):
 
 @sv.on_prefix('YuKi_add')
 async def add_watch_list(bot, ev):
-    if not priv.check_priv(ev, priv.SUPERUSER):
+    if not hoshino.priv.check_priv(ev, hoshino.priv.SUPERUSER):
         await bot.send(ev,'admin only')
     args = ev.message.extract_plain_text().split()
     try:
