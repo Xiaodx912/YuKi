@@ -22,7 +22,7 @@ config = get_config()
 yuki=ArenaMonitor(config['_viewerid'], config['_uid'], config['_access_key'])
 scheduler.add_job(
         func=yuki.do_login,
-        trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=1)),
+        trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=5)),
         args=(),
         misfire_grace_time=1)
 
@@ -37,7 +37,8 @@ async def scheduled_update():
         if config['private_mode']:
             await bot.send_msg(user_id=yuki.db[remind['uid']]['qqid'], message=msg,auto_escape=True)
         else:
-            await bot.send_msg(group_id=yuki.db[remind['uid']]['group'], message=f'[CQ:at,qq={yuki.db[remind['uid']]['qqid']}]\n'+msg)
+            cqat=f"[CQ:at,qq={yuki.db[remind['uid']]['qqid']}]\n"
+            await bot.send_msg(group_id=yuki.db[remind['uid']]['group'], message=cqat+msg)
 
 
 @sv.on_fullmatch('YuKi_update')
@@ -51,7 +52,8 @@ async def manual_update(bot, ev):
         if config['private_mode']:
             await bot.send_msg(user_id=yuki.db[remind['uid']]['qqid'], message=msg,auto_escape=True)
         else:
-            await bot.send_msg(group_id=yuki.db[remind['uid']]['group'], message=f'[CQ:at,qq={yuki.db[remind['uid']]['qqid']}]\n'+msg)
+            cqat=f"[CQ:at,qq={yuki.db[remind['uid']]['qqid']}]\n"
+            await bot.send_msg(group_id=yuki.db[remind['uid']]['group'], message=cqat+msg)
 
 
 @sv.on_prefix('YuKi_add')
@@ -137,4 +139,5 @@ async def get_specific_profile(bot,ev):
     if len(str(uid)) != 13:
         await bot.send(ev,'uid length not match')
         return
-    await bot.send(ev,"result:\n"+str(await yuki.get_profile(int(uid))))
+    profile="Result:\n"+str(await yuki.get_profile(int(uid)))
+    await bot.send(ev,profile)

@@ -97,9 +97,9 @@ class ArenaMonitor:
     async def remind_gen(self,old_rec,new_rec,uid):
         remind_list=[]
         Tdelta=new_rec['time']-old_rec['time']
-        for arena_type in ['arena_rank','grand_arena_rank']
+        for arena_type in ['arena_rank','grand_arena_rank']:
             prev,now = old_rec[arena_type],new_rec[arena_type]
-            if rec > prev:
+            if now > prev:
                 remind_list.append({'uid':uid,'name':new_rec['name'],'type':arena_type,'prev':prev,'now':now,'T':Tdelta,
                                     'isElevator':prev < search_max(now) and Tdelta <= self.config['elevator_timer']})
         return remind_list
