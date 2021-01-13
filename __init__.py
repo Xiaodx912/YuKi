@@ -75,8 +75,7 @@ async def add_watch_list(bot, ev):
     if ev['user_id']!=qqid and not hoshino.priv.check_priv(ev ,hoshino.priv.ADMIN):
         await bot.send(ev, "Only admin can add to other's qq")
         return
-    await yuki.add_uid(uid,qqid,group)
-    await bot.send(ev, "add fin")
+    await bot.send(ev, await yuki.add_uid(uid,qqid,group))
 
 @sv.on_prefix('YuKi_bind')
 async def bind_self_uid(bot,ev):
@@ -91,7 +90,10 @@ async def bind_self_uid(bot,ev):
     if len(str(uid)) != 13:
         await bot.send(ev,'uid length not match')
         return
-    await bot.send(ev, await yuki.add_uid(uid,qqid,group))
+    bind_result = await yuki.add_uid(uid,qqid,group)
+    if bind_result == "bind fin":
+        bind_result += "\n请主动向bot发送任意内容初始化私聊"
+    await bot.send(ev, bind_result)
 
 @sv.on_fullmatch('YuKi_list')
 async def list_bind_status(bot,ev):
@@ -142,3 +144,16 @@ async def get_specific_profile(bot,ev):
     profile="Result:\n"+str(await yuki.get_profile(int(uid)))
     await bot.send(ev,profile)
 
+@sv.on_fullmatch('YuKi_help')
+async def send_help(bot,ev):
+    help="""普通指令：
+    “YuKi_bind UID” ：绑定UID到你的QQ
+    “YuKi_list” ：列出你的QQ上绑定的UID
+    “YuKi_unbind UID” ：解绑本QQ绑定的UID，若仅有一条绑定记录可以不填UID
+
+    管理指令：
+    “YuKi_update” ：强制更新所有记录
+    “YuKi_add UID QQ GROUP” ：添加一条绑定记录
+    “YuKi_unbind UID” ：解绑任意UID
+    “YuKi_query UID” ：查询UID的个人信息"""
+    await bot.send(ev,help)
