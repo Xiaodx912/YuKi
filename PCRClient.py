@@ -14,7 +14,14 @@ except:
     logger = logging.getLogger('YuKi')
     logger.setLevel(logging.DEBUG)
 
+OFFLINE=0
+LOGGING=1
+READY=2
+
 class PCRClient:
+    OFFLINE=0
+    LOGGING=1
+    READY=2
     def __init__(self, viewer_id, verify=False):
         self.verify=verify
         self.viewer_id = viewer_id
@@ -46,7 +53,7 @@ class PCRClient:
             "SHORT-UDID": "000a85;436;834=656=636=186A781=432?856C486@711717752186363143276147888735732",
             "Connection": "Keep-Alive"}
         #self.conn = requests.session()
-        self.ready=False
+        self.state=self.OFFLINE
         self.login_time=0
 
     async def Callapi(self, apiurl, request, crypted = True):
@@ -79,25 +86,29 @@ class PCRClient:
             if ret_header["viewer_id"] != None and ret_header["viewer_id"] != 0 and ret_header["viewer_id"] != self.viewer_id:
                 self.viewer_id = int(ret_header["viewer_id"])
         if 'server_error' in ret["data"]:
-            self.ready=False
+            self.state=self.OFFLINE
         return ret["data"]
     async def login(self, uid, access_key):
+        while self.state == self.LOGGING:
+            logger.info('another instance in logging, wait 2s')
+            asyncio.sleep(2)
+        if self.state == self.READY:
+            logger.info('already online, login cancel')
+            return
+        self.state=self.LOGGING
         self.login_time=time.time()
         self.manifest = await self.Callapi('source_ini/get_maintenance_status', {}, False)
         if 'server_error' in self.manifest:
             logger.info('BCR server err:'+self.manifest['server_error']['title'])
-            self.ready=False
+            self.state=self.OFFLINE
             return
         ver = self.manifest["required_manifest_ver"]
         logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        await asyncio.sleep(1)
         logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
-        await asyncio.sleep(1)
         logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
-        await asyncio.sleep(1)
         logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
         self.Home = await self.Callapi("home/index", {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
-        self.ready=True
+        self.state=self.READY
 

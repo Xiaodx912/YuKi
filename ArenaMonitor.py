@@ -43,15 +43,18 @@ class ArenaMonitor:
         self.Client = PCRClient(viewer_id,self.config['verify'])
 
     async def do_login(self):
-        if not self.Client.ready:
+        if self.Client.state == self.Client.OFFLINE:
             if time.time()>self.Client.login_time+self.config["login_cd"]:
                 await self.Client.login(self.uid, self.access_key)
             else:
                 logger.debug("Client loging cd")
+        while self.state == self.LOGGING:
+            logger.info('another instance in logging, do_login wait 2s')
+            asyncio.sleep(2)
 
     async def get_profile(self, target_uid:int):
         await self.do_login()
-        if not self.Client.ready:
+        if self.Client.state == self.Client.OFFLINE:
             logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
