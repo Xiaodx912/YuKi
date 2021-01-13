@@ -48,16 +48,18 @@ class ArenaMonitor:
                 await self.Client.login(self.uid, self.access_key)
             else:
                 logger.debug("Client loging cd")
-        while self.state == self.LOGGING:
+        while self.Client.state == self.Client.LOGGING:
             logger.info('another instance in logging, do_login wait 2s')
             asyncio.sleep(2)
 
     async def get_profile(self, target_uid:int):
+        logger.debug(f'get_profile:{target_uid}')
         await self.do_login()
         if self.Client.state == self.Client.OFFLINE:
             logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
+        #logger.debug(profile)
         rec={}
         try:
             rec['time']=time.time()
@@ -65,60 +67,61 @@ class ArenaMonitor:
             rec['arena_rank']=profile['user_info']['arena_rank']
             rec['grand_arena_rank']=profile['user_info']['grand_arena_rank']
         except:
-            logger.debug(profile)
+            #logger.debug(profile)
             return {}
         return rec
 
 
     async def add_uid(self, target_uid:int, qqid:int, group_id:int):
-        rec = await self.get_profile(target_uid)
+        logger.debug(f"add_uid {target_uid}")
+        rec = await self.get_profile(int(target_uid))
         if rec == {}:
             logger.error("empty profile, add fail")
-            return
+            return "empty profile, add fail"
         if str(target_uid) in list(self.db.keys()):
             logger.error("uid item exist")
-            return
+            return "uid item exist"
         data={}
         data['rec']=rec
         data['qqid']=qqid
         data['group']=group_id
         self.db[target_uid]=data
+        return "bind fin"
 
     async def remove_uid(self, target_uid:int):
         if str(target_uid) not in list(self.db.keys()):
             logger.error("uid item not exist")
             return
         self.db.pop(target_uid)
+    
+    async def remind_gen(self,old_rec,new_rec,uid):
+        remind_list=[]
+        Tdelta=new_rec['time']-old_rec['time']
+        for arena_type in ['arena_rank','grand_arena_rank']
+            prev,now = old_rec[arena_type],new_rec[arena_type]
+            if rec > prev:
+                remind_list.append({'uid':uid,'name':new_rec['name'],'type':arena_type,'prev':prev,'now':now,'T':Tdelta,
+                                    'isElevator':prev < search_max(now) and Tdelta <= self.config['elevator_timer']})
+        return remind_list
 
-        
-    async def mention_test(self,uid:int,type:str,prev:int,now:int,delta):
-        info_str=f"===Group {self.db[uid]['group']}===\n"+f"[CQ:at,qq={self.db[uid]['qqid']}] {self.db[uid]['rec']['name']}'s {type} {prev}->{now}"
-        if prev < search_max(now) and delta <= self.config['elevator_timer']:
-            info_str += f" in {int(delta)}S\n"+f"Current search max is {search_max(now)}, elevator detected"
-        return {'uid':uid, 'type':type, 'prev':prev, 'now':now, 'str':info_str}
-        
-    async def update_profile(self, target_uid:int, mention_func=mention_test):
-        mention_info=[]
+    async def update_profile(self, target_uid:int):
+        remind_list=[]
         rec = await self.get_profile(target_uid)
         if rec == {}:
             logger.error("empty profile, update fail")
-            return mention_info
+            return remind_list
         data=self.db[target_uid]
         prev=data['rec']
-        delta=rec['time']-prev['time']
-        if rec['arena_rank'] > prev['arena_rank']:
-            mention_info.append(await mention_func(self,target_uid,'jjc',prev['arena_rank'],rec['arena_rank'],delta))
-        if rec['grand_arena_rank'] > prev['grand_arena_rank']:
-            mention_info.append(await mention_func(self,target_uid,'pjjc',prev['grand_arena_rank'],rec['grand_arena_rank'],delta))
+        remind_list.extend(await self.remind_gen(prev,rec,target_uid))
         data['rec']=rec
         self.db[target_uid]=data
-        return mention_info
+        return remind_list
 
     async def update_all(self):
-        mention_info=[]
+        remind_list=[]
         for uid in self.db.keys():
-            mention_info.extend(await self.update_profile(int(uid)))
-        return mention_info
+            remind_list.extend(await self.update_profile(int(uid)))
+        return remind_list
 
     def bind_status(self,target_qqid:int):
         bind_list=[]

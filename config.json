@@ -4,8 +4,8 @@
     "_viewerid": 1160936629251,
     "_uid": "267364644",
     "_access_key": "771c02865f3ab18e29381d0de5aac04e_sh",
-    "login_cd": 120,
-    "refresh_cd": 45,
+    "login_cd": 25,
+    "refresh_cd": 30,
     "elevator_timer": 100,
-    "private_mode": true
+    "private_mode": false
 }
