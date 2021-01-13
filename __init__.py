@@ -141,3 +141,4 @@ async def get_specific_profile(bot,ev):
         return
     profile="Result:\n"+str(await yuki.get_profile(int(uid)))
     await bot.send(ev,profile)
+

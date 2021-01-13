@@ -7,5 +7,5 @@
     "login_cd": 25,
     "refresh_cd": 30,
     "elevator_timer": 100,
-    "private_mode": false
+    "private_mode": true
 }
