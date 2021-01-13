@@ -147,13 +147,13 @@ async def get_specific_profile(bot,ev):
 @sv.on_fullmatch('YuKi_help')
 async def send_help(bot,ev):
     help="""普通指令：
-    “YuKi_bind UID” ：绑定UID到你的QQ
-    “YuKi_list” ：列出你的QQ上绑定的UID
-    “YuKi_unbind UID” ：解绑本QQ绑定的UID，若仅有一条绑定记录可以不填UID
+“YuKi_bind UID” ：绑定UID到你的QQ
+“YuKi_list” ：列出你的QQ上绑定的UID
+“YuKi_unbind UID” ：解绑本QQ绑定的UID，若仅有一条绑定记录可以不填UID
 
-    管理指令：
-    “YuKi_update” ：强制更新所有记录
-    “YuKi_add UID QQ GROUP” ：添加一条绑定记录
-    “YuKi_unbind UID” ：解绑任意UID
-    “YuKi_query UID” ：查询UID的个人信息"""
+管理指令：
+“YuKi_update” ：强制更新所有记录
+“YuKi_add UID QQ GROUP” ：添加一条绑定记录
+“YuKi_unbind UID” ：解绑任意UID
+“YuKi_query UID” ：查询UID的个人信息"""
     await bot.send(ev,help)
