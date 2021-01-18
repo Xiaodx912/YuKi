@@ -48,9 +48,13 @@ class ArenaMonitor:
                 await self.Client.login(self.uid, self.access_key)
             else:
                 logger.debug("Client loging cd")
-        while self.Client.state == self.Client.LOGGING:
+        count=0
+        while self.Client.state == self.Client.LOGGING and count <= 5 :
             logger.info('another instance in logging, do_login wait 2s')
+            count += 1
             asyncio.sleep(2)
+        if self.Client.state == self.Client.OFFLINE:
+            logger.error('do_login fail')
 
     async def get_profile(self, target_uid:int):
         logger.debug(f'get_profile:{target_uid}')

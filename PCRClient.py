@@ -89,9 +89,14 @@ class PCRClient:
             self.state=self.OFFLINE
         return ret["data"]
     async def login(self, uid, access_key):
+        count = 0
         while self.state == self.LOGGING:
             logger.info('another instance in logging, wait 2s')
+            count += 1
             asyncio.sleep(2)
+            if count > 5:
+                logger.error('another instance in logging, login fail')
+                return
         if self.state == self.READY:
             logger.info('already online, login cancel')
             return
