@@ -55,11 +55,13 @@ class ArenaMonitor:
             asyncio.sleep(2)
         if self.Client.state == self.Client.OFFLINE:
             logger.error('do_login fail')
+        if self.Client.state == self.Client.RISK:
+            logger.info('is_risk, do_login fail')
 
     async def get_profile(self, target_uid:int):
         logger.debug(f'get_profile:{target_uid}')
         await self.do_login()
-        if self.Client.state == self.Client.OFFLINE:
+        if self.Client.state != self.Client.READY:
             logger.error("BCRClient not ready,get profile fail")
             return {}
         profile = await self.Client.Callapi('profile/get_profile',{'target_viewer_id':target_uid})
@@ -100,7 +102,7 @@ class ArenaMonitor:
     
     async def remind_gen(self,old_rec,new_rec,uid):
         remind_list=[]
-        Tdelta=new_rec['time']-old_rec['time']
+        Tdelta=int(new_rec['time']-old_rec['time'])
         for arena_type in ['arena_rank','grand_arena_rank']:
             prev,now = old_rec[arena_type],new_rec[arena_type]
             if now > prev:

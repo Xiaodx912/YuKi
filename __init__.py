@@ -32,6 +32,12 @@ async def scheduled_update():
     bot=hoshino.get_bot()
     remind_list=await yuki.update_all()
     logger.debug(remind_list)
+    if yuki.Client.state == yuki.Client.RISK:
+        try:
+            SEND
+        except:
+            bot.send_msg(user_id=1020080972, message=str(yuki.Client.sdk_login),auto_escape=True)
+            SEND=True
     for remind in remind_list:
         msg = remind2str(remind)
         if config['private_mode']:

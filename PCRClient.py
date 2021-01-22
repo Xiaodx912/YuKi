@@ -14,14 +14,11 @@ except:
     logger = logging.getLogger('YuKi')
     logger.setLevel(logging.DEBUG)
 
-OFFLINE=0
-LOGGING=1
-READY=2
-
 class PCRClient:
     OFFLINE=0
     LOGGING=1
     READY=2
+    RISK=-1
     def __init__(self, viewer_id, verify=False):
         self.verify=verify
         self.viewer_id = viewer_id
@@ -100,6 +97,9 @@ class PCRClient:
         if self.state == self.READY:
             logger.info('already online, login cancel')
             return
+        if self.state == self.RISK:
+            logger.info('is_risk, login cancel')
+            return
         self.state=self.LOGGING
         self.login_time=time.time()
         self.manifest = await self.Callapi('source_ini/get_maintenance_status', {}, False)
@@ -110,7 +110,11 @@ class PCRClient:
         ver = self.manifest["required_manifest_ver"]
         logger.debug(str(self.manifest))
         self.default_headers["MANIFEST-VER"] = ver
-        logger.debug(str(await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]}) ))
+        self.sdk_login = await self.Callapi('tool/sdk_login', {"uid": uid, "access_key" : access_key, "platform" : self.default_headers["PLATFORM-ID"], "channel_id" : self.default_headers["CHANNEL-ID"]})
+        if 'is_risk' in self.sdk_login:
+            logger.info('is_risk:'+str(self.sdk_login))
+            self.state=self.RISK
+            return
         logger.debug(str(await self.Callapi('check/game_start', {"app_type": 0, "campaign_data" : "", "campaign_user": random.randint(1, 1000000)}) ))
         logger.debug(str(await self.Callapi("check/check_agreement", {}) ))
         await self.Callapi("load/index", {"carrier": "XIAOMI"})
