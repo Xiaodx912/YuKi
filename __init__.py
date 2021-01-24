@@ -150,6 +150,15 @@ async def get_specific_profile(bot,ev):
     profile="Result:\n"+str(await yuki.get_profile(int(uid)))
     await bot.send(ev,profile)
 
+@sv.on_fullmatch('YuKi_reset')
+async def reset_risk(bot,ev):
+    if yuki.Client.state == yuki.Client.RISK:
+        yuki.Client.state == yuki.Client.OFFLINE
+        await bot.send(ev,'RISK状态已重置')
+    else:
+        msg=f'当前状态为{yuki.Client.state}'
+        await bot.send(ev,msg)
+
 @sv.on_fullmatch('YuKi_help')
 async def send_help(bot,ev):
     help="""普通指令：

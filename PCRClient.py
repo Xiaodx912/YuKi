@@ -31,7 +31,7 @@ class PCRClient:
             "X-Unity-Version": "2017.4.37c2",
             "APP-VER": "2.4.10",
             "BATTLE-LOGIC-VERSION": "3",
-            "BUNDLE_VER" : "",
+            "BUNDLE-VER" : "",
             "CHANNEL-ID": "1",
             "DEVICE": "2",
             "DEVICE-ID": "c8b51fe5cb8508c2941900e8eb5b3f8b",
