@@ -1,9 +1,9 @@
 {
     "db_dir": "./",
     "verify": true,
-    "_viewerid": 1160936629251,
-    "_uid": "267364644",
-    "_access_key": "771c02865f3ab18e29381d0de5aac04e_sh",
+    "_viewerid": 0,
+    "_uid": "",
+    "_access_key": "",
     "login_cd": 25,
     "refresh_cd": 30,
     "elevator_timer": 100,
